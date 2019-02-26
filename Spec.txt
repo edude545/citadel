@@ -1,0 +1,67 @@
+
+=~~~=~~~=~~~=
+Stronghold
+=~~~=~~~=~~~=
+
+A 2D tile-based Pygame game.
+The goal of this project is to create a highly generalised game for which it is easy to add additional content and rules to govern how the world works.
+To start out, I'm building it as an open-world fantasy RPG based on the world of Hollow Earth.
+
+
+~~~ ~~~ ~~~ ~~~ ~~~
+
+Initialisation
+	
+	The game initialises in 2 phases: the registering phase, the load phase, and the game phase.
+	When the game is launched, it begins the registering phase by searching through the "mods" directory for mods.
+
+~~~ ~~~ ~~~ ~~~ ~~~
+
+Mods
+
+	A mod is a package of content that is added to the game on launch, including graphics, sounds, new game objects, and other miscellaneous scripts.
+	They take the form of a Python module, with an __init__.py file to control how the module is loaded.
+	As the name "mod" implies, this should make all of the game content *completely modular*, with a modless game install effectively being nothing but a game engine to add content & behaviour to.
+
+	Mods should be structured similarly to this:
+
+	my-mod
+	 |
+	 | assets						<-- Images & other assets NEED to be in a folder called "assets". Contents don't need to be named anything specific.
+	 | |
+	 | | example_spritesheet.png
+	 | | track1.ogg
+	 | | track2.ogg
+	 |
+	 | things						<-- Thing classes NEED to be in a folder called "things". Contents don't need to be named anything specific.
+	 | |
+	 | | enemies.py
+	 | | crafting_recipes.py
+	 | | tiles.py
+	 |
+	 | __init__.py                  <-- Needs to be here. Will be run when the mod is loaded.
+	 | 
+
+	Mods will be loaded as Mod objects. The Mod class will look like this:
+
+	Class: Mod
+	|
+	| -> Attribute: module					<-- The entire mod as a raw, unprocessed Python package. Deleted after everything has been loaded.
+	|
+	| -> Attribute: assets 					<-- A dictionary of strings to assets: Pygame.Surface instances, etc.. Spritesheets are split into
+	|											individual sprites before going here.
+	| -> Attribute: thing_classes 			<-- An array of strings to classes that inherit from Thing. Can represent everything from static objects
+	|											to interactive objects to enemies to items.
+	|
+	| => Method: lookup_asset :: name >> pygame.Surface						<-- Takes strings and returns a list of assets whose names match them.
+	| => Method: lookup_thing_class :: name >> class						<-- Like the above but for Thing classes.
+	|
+	| => Method: add_asset :: asset, name >> None									} - Self-explanatory.
+	| => Method: add_thing_class :: thing_class, name >> None 						|
+	|
+
+~~~ ~~~ ~~~ ~~~ ~~~
+
+The Mod Registry
+
+	The ModRegistry class creates an object that represents a registry of all currently-loaded mods.
