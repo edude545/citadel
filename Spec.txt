@@ -1,11 +1,11 @@
 
 =~~~=~~~=~~~=
-Stronghold
+Citadel
 =~~~=~~~=~~~=
 
 A 2D tile-based Pygame game.
 The goal of this project is to create a highly generalised game for which it is easy to add additional content and rules to govern how the world works.
-To start out, I'm building it as an open-world fantasy RPG based on the world of Hollow Earth.
+To start out, I'm building it like a sandbox fantasy RPG.
 
 
 ~~~ ~~~ ~~~ ~~~ ~~~
