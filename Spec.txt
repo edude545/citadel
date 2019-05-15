@@ -4,24 +4,32 @@ Citadel
 =~~~=~~~=~~~=
 
 A 2D tile-based Pygame game.
-The goal of this project is to create a highly generalised game for which it is easy to add additional content and rules to govern how the world works.
-To start out, I'm building it like a sandbox fantasy RPG.
-
+The goal of this project is to create a top-down fantasy RPG with a minimal amount of hardcoded content, so the game will generate almost everything - room layouts, enemies, items... - dynamically.
 
 ~~~ ~~~ ~~~ ~~~ ~~~
 
 Initialisation
 	
-	The game initialises in 2 phases: the registering phase, the load phase, and the game phase.
-	When the game is launched, it begins the registering phase by searching through the "mods" directory for mods.
+	The game runs in 2 phases: the registering phase and the game phase.
+	When the game is launched, it begins the registering phase by initialising the ModRegistry, then loading all mods in the main "mods" directory.
 
 ~~~ ~~~ ~~~ ~~~ ~~~
 
 Mods
 
-	A mod is a package of content that is added to the game on launch, including graphics, sounds, new game objects, and other miscellaneous scripts.
-	They take the form of a Python module, with an __init__.py file to control how the module is loaded.
-	As the name "mod" implies, this should make all of the game content *completely modular*, with a modless game install effectively being nothing but a game engine to add content & behaviour to.
+	A Mod is a package of content that is added to the game on launch, including graphics, sounds, new game objects, and other miscellaneous scripts.
+	They take the form of an instance of the Mod class, with an __init__.py file to control how the module is loaded.
+	As the name "mod" implies, this should make *all* of the game's content *completely modular*, with a modless installation being nothing but a skeleton to add content & behaviour to.
+
+	Mod.__init__ contains the bulk of the code required to load a mod (running load scripts, processing spritesheets, etc.) and looks something like this:
+
+		- Create a local variable "module" with the __import__ function
+		- Initialise "assets" and "things" as empty dictionaries
+		- Loop through the files in the assets directory and check the file extension
+			- If it's a .png, call it with process_spritesheet and add it (along with its name, minus the extension) to assets
+		- Loop through the Python scripts in the things directory:
+			- Load the script
+			- Add the script's eponymous class to self.things
 
 	Mods should be structured similarly to this:
 
@@ -32,12 +40,14 @@ Mods
 	 | | example_spritesheet.png
 	 | | track1.ogg
 	 | | track2.ogg
+	 | |
 	 |
 	 | things						<-- Thing classes NEED to be in a folder called "things". Contents don't need to be named anything specific.
 	 | |
 	 | | enemies.py
 	 | | crafting_recipes.py
 	 | | tiles.py
+	 | |
 	 |
 	 | __init__.py                  <-- Needs to be here. Will be run when the mod is loaded.
 	 | 
@@ -50,18 +60,41 @@ Mods
 	|
 	| -> Attribute: assets 					<-- A dictionary of strings to assets: Pygame.Surface instances, etc.. Spritesheets are split into
 	|											individual sprites before going here.
-	| -> Attribute: thing_classes 			<-- An array of strings to classes that inherit from Thing. Can represent everything from static objects
+	| -> Attribute: things 			<-- An array of strings to classes that inherit from Thing. Can represent everything from static objects
 	|											to interactive objects to enemies to items.
 	|
-	| => Method: lookup_asset :: name >> pygame.Surface						<-- Takes strings and returns a list of assets whose names match them.
-	| => Method: lookup_thing_class :: name >> class						<-- Like the above but for Thing classes.
+	| => Method: lookup_asset :: name >> pygame.Surface						<-- Takes a string and returns whichever image matches it.
+	| => Method: lookup_thing :: name >> class								<-- Like the above but for Thing classes.
 	|
 	| => Method: add_asset :: asset, name >> None									} - Self-explanatory.
-	| => Method: add_thing_class :: thing_class, name >> None 						|
+	| => Method: add_thing :: thing, name >> None 									|
 	|
+
+~~~ ~~~
+
+Things
+
+	Children of the class Thing represent classes for pretty much any physical in-game object. They can inherit from other built-in classes to add extra functionality (Tile, Floor, Entity, Item, etc.).
+	Children of Thing are defined in a very specific way - they have to be defined in a script in the "things" directory of a mod, in a file that has the same name as it, plus the .py extension.
+	For example, a Thing called StoneTileFloor would be defined in a file called StoneTileFloor.py. Other classes, functions, & variables can be defined in this file, but only the object with the name StoneTileFloor (which should obviously be a class) will be loaded permanently. Specifically, the entirety of the file is loaded, then StoneTile is added to the mod's "things" dictionary.
+
+~~~ ~~~
+
+Tiles
+
+	Tiles should dynamically "connect" to look like they're part of one continuous wall.
+	Textures for Tile objects should consist of spritesheets with 6 32*32 textures, named _0, _1, _2_corner, _2_wall, _3, and _4 to represent the number of open sides they have and their shape.
+	Only these six textures should be supplied - the others will be dynamically created by rotating these six.
+
+	_0 ####   _0_corner +###   _1 ----   _2_corner +---   _2_wall ----   _3 +--+   _4 +--+
+	   ####             ####      ####             |###           ####      |##|      |##|
+	   ####             ####      ####             |###           ####      |##|      |##|
+	   ####             ####      ####             |###	     	  ----      |##|      +--+
 
 ~~~ ~~~ ~~~ ~~~ ~~~
 
 The Mod Registry
 
 	The ModRegistry class creates an object that represents a registry of all currently-loaded mods.
+
+~~~ ~~~ ~~~ ~~~ ~~~

@@ -1,52 +1,68 @@
 import pygame
 import vector as v
 
-import mapobjects
+import thing
 
 
 class Location:
-	def __init__(self):
-		self.stuff = []
+	def __init__(self, x, y):
+		self.pos = v.Vector(y,x)
+		self.things = []
 
-	def get_stuff(self, type_):
-		r = list(filter(lambda x: type(x) is type_, self.stuff))
-		if r == []:
-			return type_.default
-		if len(r) > 1:
-			raise Exception("Location " + str(self) + " has multiple " + str(type_) + ": " + str(r))
-		return r[0]
+	def add(self, *things):
+		for t in things:
+			if issubclass(type(t), thing.StoresPos):
+				t.pos = self.pos
+		self.things += things
 
-	def add_stuff(self, *stuff):
-		self.stuff += stuff
+	def remove(self, obj):
+		self.things.remove(obj)
 
-	def gen_imgs(self):
-		return [stuff.img for stuff in self.stuff]
+	def get_sprites(self):
+		return [thing.get_sprite() for thing in self.things]
 
-
+	def is_passable(self):
+		for thing in self.things:
+			if not thing.getcv("passable"):
+				return False
+		return True
 
 class Board:
-	def __init__(self, game, size): # size is a vector
+	def __init__(self, game, size):
 		self.game = game
-		self.size = size
+		self.size = size # vector
 
-		self.grid = [[Location() for _ in range(self.width())] for _ in range(self.height())]
+		self.grid = [[Location(x,y) for x in range(self.width())] for y in range(self.height())]
 		#self.rects = [[pygame.Rect((y,x), tuple(self.cell_size)) for x in range(self.width())] for y in range(self.height())]
 
-		self.cell_size = v.Vector(15,15)
+		self.cell_size = v.Vector(32,32)
 
 	def __iter__(self):
-		for y in range(len(self.grid)):
-			for x in range(len(self.grid[0])):
-				yield (y,x)
+		for ln in self.grid:
+			for loc in ln:
+				yield loc
 
 	def __getitem__(self, index):
+		if type(index) is v.Vector:
+			return self.grid[index[0]][index[1]]
 		return self.grid[index]
 
 	# ~~~ ~~~ ~~~
 
-	def add_all(self, name): # DEBUG: Should NOT be used for anything else
-		for y,x in self:
-			l = Location(); l.add_stuff(mapobjects.new_stuff(name)); self[y][x] = l
+	def add(self, thing, pos):
+		self[pos].add(thing)
+
+	def move(self, obj, dest):
+		#print(str(obj.pos)+" ==> "+str(dest))
+		self[obj.pos].remove(obj)
+		self[dest].add(obj)
+
+	def add_from_class(self, thing_class, pos): # DEBUG: very wonky, probably shouldnt be used
+		self[pos].add(thing_class(self))
+
+	def add_all(self, thing_class): # DEBUG: Should definitely NOT be used for anything else
+		for loc in self:
+			loc.add(thing_class(self))
 
 	# ~~~ ~~~ ~~~
 
@@ -56,8 +72,18 @@ class Board:
 	def draw(self, surface, start=v.Vector(0,0)):
 		for y in range(self.height()):
 			for x in range(self.width()):
-				for img in self.grid[y][x].gen_imgs():
-					surface.blit(img, (start[1]+y*self.cell_size[1], start[0]+x*self.cell_size[0]))
+				for sprite in self.grid[y][x].get_sprites():
+					surface.blit(sprite, (start[1]+y*self.cell_size[1], start[0]+x*self.cell_size[0]))
+
+	# ~~~ ~~~ ~~~
+
+	def get_moore_neighbourhood(self, pos):
+		y, x = pos
+		return [
+			[self[y-1][x-1], self[y-1][x], self[y-1][x+1]]
+			[self[y][x-1], self[y][x], self[y][x+1]]
+			[self[y+1][x-1], self[y+1][x], self[y+1][x+1]]
+		]
 
 	# ~~~ ~~~ ~~~
 
