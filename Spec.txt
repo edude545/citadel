@@ -82,14 +82,15 @@ Things
 
 Tiles
 
-	Tiles should dynamically "connect" to look like they're part of one continuous wall.
-	Textures for Tile objects should consist of spritesheets with 6 32*32 textures, named _0, _1, _2_corner, _2_wall, _3, and _4 to represent the number of open sides they have and their shape.
-	Only these six textures should be supplied - the others will be dynamically created by rotating these six.
+	Adjacent Tiles should dynamically "connect" to look like they're part of one continuous wall.
+	Textures for Tile objects should consist of spritesheets with a few 32*32 textures.
+	The textures provided should represent the bases for wall textures and 
+	Only these 10 textures should be supplied - the others will be dynamically created by rotating them.
 
-	_0 ####   _0_corner +###   _1 ----   _2_corner +---   _2_wall ----   _3 +--+   _4 +--+
-	   ####             ####      ####             |###           ####      |##|      |##|
-	   ####             ####      ####             |###           ####      |##|      |##|
-	   ####             ####      ####             |###	     	  ----      |##|      +--+
+	 ####   ----   +---   ----   +--+   +--+   +###   +##+   +##+   +##+
+	 ####   ####   |###   ####   |##|   |##|   ####   ####   ####   ####
+	 ####   ####   |###   ####   |##|   |##|   ####   ####   ####   ####
+	 ####   ####   |###	  ----   |##|   +--+   ####   ####   +###   +##+
 
 ~~~ ~~~ ~~~ ~~~ ~~~
 

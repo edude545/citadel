@@ -21,7 +21,7 @@ class Game:
 		self.active_board = None
 
 		self.game_region_corner = v.Vector(8, 8)
-		self.ui_region_corner = v.Vector(912, 8)
+		self.ui_region_corner = v.Vector(8, 912)
 
 		self.cmds = {}
 		self.ui_elements = []
@@ -89,7 +89,7 @@ class Game:
 	# ~~~ ~~~ ~~~ v Drawing methods v ~~~ ~~~ ~~~
 
 	def draw(self, board=None):
-		if board is None: board=self.active_board # you can't put "self" in parameter declarations so you have to do this manually
+		if board is None: board=self.active_board # you can't refer to earlier parameters in parameter declarations so this has to be done manually
 
 		self.screen.fill(colors.backdrop)
 		board.draw(self.screen, start=self.game_region_corner)

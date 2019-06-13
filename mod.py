@@ -26,17 +26,16 @@ class Mod:
 
 		sys.path.insert(0, things_path)
 		for thing_file_name in os.listdir(things_path):
-			if thing_file_name[0] != "_":
+			if thing_file_name[0] != "_": # every file not starting with _ is considered to be a thing file and will be interpreted as such
 				name = thing_file_name.split(".")[0]
-
 				thing_file = __import__(name)
 				if hasattr(thing_file, name):
-					thing = getattr(__import__(name), name)
-					if hasattr(thing, "spritesheet"):
-						thing.spritesheet = self.lookup_asset(thing.spritesheet)
-						if hasattr(thing, "sprite"):
-							thing.sprite = thing.spritesheet[thing.sprite]
-					self.add_thing(thing, name)
+					thing_class = getattr(thing_file, name)
+					if hasattr(thing_class, "spritesheet"):
+						thing_class.spritesheet = self.lookup_asset(thing_class.spritesheet)
+						if hasattr(thing_class, "sprite"):
+							thing_class.sprite = thing_class.spritesheet[thing_class.sprite]
+					self.add_thing(thing_class, name)
 				else:
 					raise Exception("Module \"" + name + "\" has no class with that name")
 

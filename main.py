@@ -28,12 +28,16 @@ g.add_ui_element(ui.Monitor(lambda:">>> "if g.console_is_selected else"", pos=v.
 
 g.do_pygame_init()
 
-b = board.Board(g, v.Vector(22,28))
+b = board.Board(g, v.Vector(50,50))
 b.add_all(mods.basic.things.StoneTileFloor)
 
 g.active_board = b
 
 # pre-launch commands
-g.do_cmd("place basic.Player 2 2")
+g.do_cmd("place basic.Player 1 1")
+g.do_cmd("place basic.StoneWall 0 0")
+g.do_cmd("place basic.StoneWall 2 0")
+g.do_cmd("place basic.StoneWall 0 2")
+g.do_cmd("place basic.StoneWall 2 2")
 
 g.launch()

@@ -1,4 +1,5 @@
 import vector as v
+import transform
 from pygame.locals import *
 
 import common
@@ -8,7 +9,7 @@ class Controllable:
 	def handle_keydown_event(self, ev): pass
 	def handle_keyup_event(self, ev): pass
 
-class StoresPos:
+class StorePos:
 	pass
 
 
@@ -23,9 +24,9 @@ class Thing: # The class for a game object that inhabits a board, e.g. tiles, in
 		self.board = board
 
 	def get_sprite(self):
-		return self.getcv("sprite")
+		return self.sprite
 	def get_spritesheet(self):
-		return self.getcv("spritesheet")
+		return self.spritesheet
 
 	def getcv(self, name): # get class variable
 		return getattr(self.__class__, name)
@@ -33,20 +34,34 @@ class Thing: # The class for a game object that inhabits a board, e.g. tiles, in
 
 class Tile(Thing): # WIP - this class is *not* used yet
 
-	def __init__(self, board, pos, spritesheet_path):
+	passable = False
+
+	def __init__(self, board):
 		super().__init__(board)
-		self.pos = pos # Vector
-		self.spritesheet = spritesheet
-		self.sprite_index = 0
-		self.update_texture()
 
 	# ~~~ ~~~ ~~~
 
+	def get_sprite(self):
+		self.update_sprite_index()
+		return self.spritesheet[self.sprite_index]
+
 	def update_sprite_index(self):
+		self.sprite_index=0;self.sprite_rotation=0;return
 		m = self.get_moore_neighbourhood_tiles
 		t=True;f=False
-		if t == [[f,f,f],[f,f,f],[f,f,f]]: self.sprite_index = 0
-		elif t in ()
+		_0 = [[t,t,t],[t,t,t],[t,t,t]]
+		_0 = [[f,f,f],[t,t,t],[t,t,t]]
+		_0 = [[f,f,f],[f,t,f],[f,f,f]]
+		_0 = [[f,f,f],[f,t,f],[f,f,f]]
+		_0 = [[f,f,f],[f,t,f],[f,f,f]]
+		_0 = [[f,f,f],[f,t,f],[f,f,f]]
+		_0 = [[f,f,f],[f,t,f],[f,f,f]]
+		_0 = [[f,f,f],[f,t,f],[f,f,f]]
+		_0 = [[f,f,f],[f,t,f],[f,f,f]]
+		_0 = [[f,f,f],[f,t,f],[f,f,f]]
+
+		if m == full: self.sprite_index = 0; self.sprite_rotation = 0
+		elif m == [[f,f,f],[t,t,t],[f,f,f]]: self.sprite_index = 1; self.sprite_rotation = 0
 
 	def get_moore_neighbourhood_tiles(self):
 		mn = self.board.get_moore_neighbourhood(self.pos)
@@ -57,7 +72,7 @@ class Tile(Thing): # WIP - this class is *not* used yet
 		return r
 
 
-class Entity(Thing, StoresPos):
+class Entity(Thing, StorePos):
 
 	def __init__(self, board):
 		super().__init__(board)
@@ -68,9 +83,10 @@ class Entity(Thing, StoresPos):
 
 	def walk(self, direction, dist=1):
 		self.direction = direction
-		new = self.pos + common.direction_int_to_vector(self.direction)
-		if self.board[new].is_passable():
+		new = self.pos + common.direction_int_to_vector(self.direction) * dist
+		if 0 <= new[0] < self.board.width() and 0 <= new[1] < self.board.height() and self.board[new].is_passable():
 			self.board.move(self, new)
+
 
 class ControllableEntity(Entity, Controllable):
 
