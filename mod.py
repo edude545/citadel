@@ -33,8 +33,8 @@ class Mod:
 					thing_class = getattr(thing_file, name)
 					if hasattr(thing_class, "spritesheet"):
 						thing_class.spritesheet = self.lookup_asset(thing_class.spritesheet)
-						if hasattr(thing_class, "sprite"):
-							thing_class.sprite = thing_class.spritesheet[thing_class.sprite]
+						#if hasattr(thing_class, "sprite"):
+						#	thing_class.sprite = thing_class.spritesheet[thing_class.sprite]
 					self.add_thing(thing_class, name)
 				else:
 					raise Exception("Module \"" + name + "\" has no class with that name")

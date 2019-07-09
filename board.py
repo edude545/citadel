@@ -10,8 +10,8 @@ class Location:
 		self.things = []
 
 	def __iter__(self):
-		for thing in self.things:
-			yield thing
+		for t in self.things:
+			yield t
 
 	def add(self, *things):
 		for t in things:
@@ -23,14 +23,24 @@ class Location:
 		self.things.remove(obj)
 
 	def get_sprites(self):
-		for thing in self:
-			yield thing.get_sprite()
+		for t in self:
+			yield t.get_sprite()
 
 	def is_passable(self):
-		for thing in self:
-			if not thing.passable:
+		for t in self:
+			if not t.passable:
 				return False
 		return True
+
+	def interact(self, entity):
+		for t in self:
+			t.interact(entity)
+
+	def has_tile(self):
+		for t in self:
+			if issubclass(type(t), thing.Tile):
+				return True
+		return False
 
 class Board:
 	def __init__(self, game, size):
@@ -46,10 +56,10 @@ class Board:
 			for loc in ln:
 				yield loc
 
-	def __getitem__(self, index): # index is Vector(x,y)
-		if type(index) is v.Vector:
+	def __getitem__(self, index):
+		if type(index) is v.Vector: # index as Vector(x,y)
 			return self.grid[index[1]][index[0]]
-		return self.grid[index]
+		raise ValueError("Board index must be given as Vector")
 
 	# ~~~ ~~~ ~~~
 
@@ -81,20 +91,29 @@ class Board:
 			if 0 <= x < self.width():
 				for y in range(sy, ey):
 					if 0 <= y < self.height():
-						for sprite in self[y][x].get_sprites():
-							surface.blit(sprite, (start[0]+cx, start[1]+cy))
+						for thing in self[v.Vector(x,y)]:
+							thing.draw(surface, start[0]+cx, start[1]+cy)
 					cy += self.cell_size[1]
 			cy = 0; cx += self.cell_size[0]
 
 	# ~~~ ~~~ ~~~
 
 	def get_moore_neighbourhood(self, pos):
-		y, x = pos
+		x, y = pos
+		e = v.Vector
 		return [
-			[self[y-1][x-1], self[y-1][x], self[y-1][x+1]]
-			[self[y]  [x-1], self[y]  [x], self[y]  [x+1]]
-			[self[y+1][x-1], self[y+1][x], self[y+1][x+1]]
+			[self[e(x-1,y-1)], self[e(x  ,y-1)], self[e(x+1,y-1)]],
+			[self[e(x-1,y  )], self[e(x  ,y  )], self[e(x+1,y  )]],
+			[self[e(x-1,y+1)], self[e(x  ,y+1)], self[e(x+1,y+1)]]
 		]
+
+	def get_moore_neighbourhood_tiles(self, pos):
+		mn = self.get_moore_neighbourhood(pos)
+		r = [[None for _ in range(3)] for _ in range(3)]
+		for x in range(3):
+			for y in range(3):
+				r[x][y] = mn[x][y].has_tile()
+		return r
 
 	# ~~~ ~~~ ~~~
 

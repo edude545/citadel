@@ -2,5 +2,9 @@ import thing
 
 class DebugTile(thing.Thing):
 
-	spritesheet = "missing_texture"
+	spritesheet = "rg"
 	sprite = 0
+	passable = False
+
+	def interact(self, entity):
+		self.sprite = int(not self.sprite)

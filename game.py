@@ -49,7 +49,10 @@ class Game:
 				self.handle_event(ev)
 
 			if self.ticking:
-				self.tick()
+				self.gametime += 1
+
+			for loc in self.active_board:
+				pass#;loc.update()
 
 			self.draw()
 
@@ -161,9 +164,3 @@ class Game:
 				else:
 					element.draw(surface, tuple(pos))
 					pos += v.Vector(0, element.height)
-
-	# ~~~ ~~~ ~~~
-
-	def tick(self):
-
-		self.gametime += 1
