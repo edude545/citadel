@@ -3,41 +3,44 @@ import os
 import sys
 import time
 import colors
-import dmap
 
 
 
 class Mod:
 
-	def __init__(self, path, res=32):
-		module = __import__("mods." + path)
+	def __init__(self, path, game, res=32):
+		self.game = game
 
-		self.assets = dmap.DMap()
-		self.things = dmap.DMap()
+		assets_path = "mods\\"+path+"\\assets"
+		things_path = "mods\\"+path+"\\things"
 
-		assets_path = "mods\\" + path + "\\assets"
-		things_path = "mods\\" + path + "\\things"
+		if os.path.isdir(assets_path):
+			for asset_file_name in os.listdir(assets_path):
+				if asset_file_name[0] != "_":
+					name, ext = asset_file_name.split(".")[-2:]
+					if ext == "png":
+						self.add(Spritesheet(pygame.image.load(assets_path + "\\" + asset_file_name), name, res=32), name)
 
-		for asset_file_name in os.listdir(assets_path):
-			if asset_file_name[0] != "_":
-				name, ext = asset_file_name.split(".")[-2:]
-				if ext == "png":
-					self.add_asset(Spritesheet(pygame.image.load(assets_path + "\\" + asset_file_name), name, res=32), name)
+		if os.path.isdir(things_path):
+			sys.path.insert(0, things_path)
+			for thing_file_name in os.listdir(things_path):
+				if thing_file_name[0] != "_": # every file not starting with _ is considered to be a thing file and will be interpreted as such
 
-		sys.path.insert(0, things_path)
-		for thing_file_name in os.listdir(things_path):
-			if thing_file_name[0] != "_": # every file not starting with _ is considered to be a thing file and will be interpreted as such
-				name = thing_file_name.split(".")[0]
-				thing_file = __import__(name)
-				if hasattr(thing_file, name):
+					name = thing_file_name.split(".")[0]
+					thing_file = __import__(name)
+
+					if not hasattr(thing_file, name):
+						raise Exception("Module \"" + name + "\" has no class with that name")
+
 					thing_class = getattr(thing_file, name)
+
 					if hasattr(thing_class, "spritesheet"):
-						thing_class.spritesheet = self.lookup_asset(thing_class.spritesheet)
-						#if hasattr(thing_class, "sprite"):
-						#	thing_class.sprite = thing_class.spritesheet[thing_class.sprite]
-					self.add_thing(thing_class, name)
-				else:
-					raise Exception("Module \"" + name + "\" has no class with that name")
+						thing_class.spritesheet = self.lookup(thing_class.spritesheet)
+						if not hasattr(thing_class, "sprite"):
+							thing_class.sprite = 0
+
+					self.add(thing_class, name)
+			del(sys.path[0])
 
 	def __getitem__(self, index):
 		index = index.split(".",1)
@@ -47,24 +50,24 @@ class Mod:
 			return self.lookup_thing(index[1])
 		raise KeyError("Couldn't find "+index[0]+"."+index[1])
 
-	def lookup_asset(self, name):
-		if name in self.assets:
-			return self.assets[name]
-	def lookup_thing(self, name):
-		if name in self.things:
-			return self.things[name]
+	def lookup(self, name):
+		if hasattr(self,name): return getattr(self,name)
 
-	def add_asset(self, asset, name):
-		self.assets[name] = asset
-	def add_thing(self, thing, name):
-		self.things[name] = thing
+	def add(self, element, name):
+		setattr(self,name,element)
 
+	def call_hook(self, name):
+		getattr(self,name)(self.game)
+
+	def preload(self, game): pass
+	def onload(self, game): pass
+	def onregistryload(self, game): pass
+	def onquit(self, game): pass
 
 
 
 class Spritesheet:
 	def __init__(self, raw, name, res=32): # raw is a pygame Surface object that represents an unprocessed spritesheet
-		self.raw = raw
 		self.name = name
 		self.res = res
 

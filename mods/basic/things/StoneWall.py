@@ -4,7 +4,7 @@ class StoneWall(thing.Tile):
 	
 	passable = False
 
-	spritesheet = "TileConnectionTest"
+	spritesheet = "StoneWall"
 	sprite = 0
 
 	def interact(self, entity):

@@ -1,9 +1,12 @@
 import thing
+import inventory
 
 class Player(thing.ControllableEntity):
 
-	spritesheet = "player"
+	unique = True
 
-	def __init__(self, board):
-		super().__init__(board)
-		board.game.set_control(self)
+	def __init__(self):
+		super().__init__()
+		self.inventory = inventory.Inventory(size=50)
+
+	spritesheet = "player"

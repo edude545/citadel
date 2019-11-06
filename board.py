@@ -1,26 +1,40 @@
 import pygame
+import copy
 import vector as v
 
 import thing
 
 
 class Location:
-	def __init__(self, x, y):
+
+	def __init__(self, board, x, y):
 		self.pos = v.Vector(x,y)
+		self.board = board
 		self.things = []
 
 	def __iter__(self):
 		for t in self.things:
 			yield t
 
+	def __getitem__(self, index):
+		return self.things[index]
+	def __setitem__(self, index, element):
+		self.things[index] = element
+
+	def __len__(self):
+		return len(self.things)
+
 	def add(self, *things):
 		for t in things:
-			if issubclass(type(t), thing.StorePos):
-				t.pos = self.pos
+			t.loc = self
 		self.things += things
 
 	def remove(self, obj):
 		self.things.remove(obj)
+
+	def remove_all(self):
+		for thing in self:
+			self.remove(thing)
 
 	def get_sprites(self):
 		for t in self:
@@ -36,18 +50,25 @@ class Location:
 		for t in self:
 			t.interact(entity)
 
+	def step_on(self, entity):
+		for t in self:
+			t.step_on(entity)
+
 	def has_tile(self):
 		for t in self:
 			if issubclass(type(t), thing.Tile):
 				return True
 		return False
 
+	def get_moore_neighbourhood_tiles(self):
+		return self.board.get_moore_neighbourhood_tiles(self.pos)
+
 class Board:
 	def __init__(self, game, size):
 		self.game = game
-		self.size = size # vector
+		self.size = size # v.Vector(x,y)
 
-		self.grid = [[Location(x,y) for x in range(self.width())] for y in range(self.height())]
+		self.grid = [[Location(self,x,y) for x in range(self.width())] for y in range(self.height())]
 
 		self.cell_size = v.Vector(32,32)
 
@@ -56,27 +77,38 @@ class Board:
 			for loc in ln:
 				yield loc
 
-	def __getitem__(self, index):
-		if type(index) is v.Vector: # index as Vector(x,y)
-			return self.grid[index[1]][index[0]]
-		raise ValueError("Board index must be given as Vector")
+	def __getitem__(self, index): # index as Vector(x,y)
+		return self.grid[index[1]][index[0]]
+	def __setitem__(self, index, element):
+		self.grid[index[1]][index[0]] = element
 
 	# ~~~ ~~~ ~~~
 
-	def add(self, thing, pos):
-		self[pos].add(thing)
+	def copy(self):
+		return copy.deepcopy(self)
 
-	def move(self, obj, dest):
-		#print(str(obj.pos)+" ==> "+str(dest))
-		self[obj.pos].remove(obj)
-		self[dest].add(obj)
+	def correct_pointers(self):
+		for loc in self:
+			loc.board = self
+			for t in loc:
+				t.loc = loc
+
+	def add(self, thing_, pos):
+		self[pos].add(thing_)
+		if issubclass(type(thing_),thing.Controllable):
+			self.game.set_control(thing_)
+
+	def move(self, thing_, dest):
+		#print(str(thing_.pos)+" ==> "+str(dest))
+		self[thing_.get_pos()].remove(thing_)
+		self[dest].add(thing_)
 
 	def add_from_class(self, thing_class, pos): # a lil bit wonky, use with caution
-		self[pos].add(thing_class(self))
+		self.add(thing_class(), pos)
 
 	def add_all(self, thing_class): # DEBUG: Should definitely NOT be used for anything else
 		for loc in self:
-			loc.add(thing_class(self))
+			loc.add(thing_class())
 
 	# ~~~ ~~~ ~~~
 
@@ -84,8 +116,8 @@ class Board:
 	def width(self): return self.size[0]
 
 	def draw(self, surface, start=v.Vector(0,0)):
-		sx, sy = self.game.control.pos + v.Vector(-12, -10)
-		ex, ey = self.game.control.pos + v.Vector(12, 10)
+		sx, sy = self.game.control.loc.pos + v.Vector(-12, -10)
+		ex, ey = self.game.control.loc.pos + v.Vector(12, 10)
 		cx, cy = (0, 0)
 		for x in range(sx, ex):
 			if 0 <= x < self.width():

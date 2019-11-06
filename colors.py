@@ -10,20 +10,27 @@ def set_backdrop(color):
 black = (0, 0, 0)
 white = (255, 255, 255)
 
+lgray = (191, 191, 191)
+gray = (127, 127, 127)
+dgray = (63, 63, 63)
+
 red = (255, 0, 0)
 green = (0, 255, 0)
 blue = (0, 0, 255)
+
+pink = (255, 191, 191)
+turquoise = (191, 255, 191)
+lblue = (191, 191, 255)
 
 orange = (255, 255, 0)
 cyan = (0, 255, 255)
 purple = (255, 0, 255)
 
-navy = (0, 0, 64)
-dgreen = (0, 128, 0)
-lblue = (192, 192, 255)
-dpurple = (128, 0, 128)
-lgray = (192, 192, 192)
-dgray = (128, 128, 128)
+navy = (0, 0, 63)
+dgreen = (0, 127, 0)
+dpurple = (127, 0, 127)
 
-backdrop = black
-text = complement(backdrop)
+set_backdrop(black)
+
+inv_panel_backdrop = dgray
+inv_panel_slots = lgray
