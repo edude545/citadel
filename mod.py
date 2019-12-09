@@ -8,11 +8,11 @@ import colors
 
 class Mod:
 
-	def __init__(self, path, game, res=32):
+	def __init__(self, name, game, res=32):
 		self.game = game
 
-		assets_path = "mods\\"+path+"\\assets"
-		things_path = "mods\\"+path+"\\things"
+		assets_path = "mods\\"+name+"\\assets"
+		things_path = "mods\\"+name+"\\things"
 
 		if os.path.isdir(assets_path):
 			for asset_file_name in os.listdir(assets_path):
@@ -62,6 +62,7 @@ class Mod:
 	def preload(self, game): pass
 	def onload(self, game): pass
 	def onregistryload(self, game): pass
+	def onlaunch(self, game): pass
 	def onquit(self, game): pass
 
 

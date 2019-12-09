@@ -32,9 +32,10 @@ class Location:
 	def remove(self, obj):
 		self.things.remove(obj)
 
-	def remove_all(self):
+	def clear(self):
 		for thing in self:
 			self.remove(thing)
+	remove_all = clear
 
 	def get_sprites(self):
 		for t in self:
@@ -50,9 +51,14 @@ class Location:
 		for t in self:
 			t.interact(entity)
 
+
+
 	def step_on(self, entity):
 		for t in self:
 			t.step_on(entity)
+	def bump(self, entity):
+		for t in self:
+			t.bump(entity)
 
 	def has_tile(self):
 		for t in self:
@@ -64,8 +70,8 @@ class Location:
 		return self.board.get_moore_neighbourhood_tiles(self.pos)
 
 class Board:
-	def __init__(self, game, size):
-		self.game = game
+	def __init__(self, save, size):
+		self.save = save
 		self.size = size # v.Vector(x,y)
 
 		self.grid = [[Location(self,x,y) for x in range(self.width())] for y in range(self.height())]
@@ -93,13 +99,15 @@ class Board:
 			for t in loc:
 				t.loc = loc
 
+	def clear(self, pos):
+		self[pos].clear()
+
 	def add(self, thing_, pos):
 		self[pos].add(thing_)
 		if issubclass(type(thing_),thing.Controllable):
-			self.game.set_control(thing_)
+			self.save.set_control(thing_)
 
 	def move(self, thing_, dest):
-		#print(str(thing_.pos)+" ==> "+str(dest))
 		self[thing_.get_pos()].remove(thing_)
 		self[dest].add(thing_)
 
@@ -116,8 +124,8 @@ class Board:
 	def width(self): return self.size[0]
 
 	def draw(self, surface, start=v.Vector(0,0)):
-		sx, sy = self.game.control.loc.pos + v.Vector(-12, -10)
-		ex, ey = self.game.control.loc.pos + v.Vector(12, 10)
+		sx, sy = self.save.control.loc.pos + v.Vector(-12, -10)
+		ex, ey = self.save.control.loc.pos + v.Vector(12, 10)
 		cx, cy = (0, 0)
 		for x in range(sx, ex):
 			if 0 <= x < self.width():

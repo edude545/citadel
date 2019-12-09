@@ -58,6 +58,7 @@ class Game:
 		self.font = pygame.font.Font(pygame.font.get_default_font(), 10)
 
 	def launch(self):
+		self.mods.call_hooks("onlaunch")
 		while True:
 			for ev in pygame.event.get():
 				self.handle_event(ev)
@@ -98,7 +99,7 @@ class Game:
 			self.active_save.game = self
 			self.active_save_name = save_name
 			self.add_console_message("Loaded "+save_name)
-		self.refresh_ui()
+			self.refresh_ui()
 
 	def autosave(self, debug_msg=True):
 		self.save(self.active_save_name, debug_msg=False)
@@ -107,7 +108,7 @@ class Game:
 	def has_save_loaded(self): return self.active_save is not None
 
 	def quit(self):
-		if self.autosave_enabled:
+		if self.has_save_loaded() and self.autosave_enabled:
 			self.autosave(debug_msg=False)
 			self.add_console_message("Autosaved as "+self.active_save_name+"; quitting")
 		else:
@@ -186,7 +187,6 @@ class Game:
 				self.do_cmd(self.console_input); self.console_input = ""
 			else:
 				if chr(ev.key) in common.keyboard_replace_dict:
-					print("Test")
 					ev.key = ord(common.keyboard_replace_dict[chr(ev.key)])
 				if pygame.key.get_mods() & KMOD_SHIFT: # if shift is held...
 					if 97 <= ev.key <= 122: # ...and the character entered is a letter...
@@ -267,7 +267,10 @@ class Game:
 			self.screen.blit(self.cursor_itemstack_panel.render(),(pygame.mouse.get_pos()[0]-16,pygame.mouse.get_pos()[1]-16))
 
 	def refresh_ui(self):
-		self.remove_control_inventory_panel();self.add_control_inventory_panel()
+		if self.control_inventory_panel is not None:
+			self.remove_control_inventory_panel()
+		if self.has_save_loaded and hasattr(self.active_save.control,"inventory"):
+			self.add_control_inventory_panel()
 
 	
 
@@ -301,6 +304,9 @@ class Save:
 		else:
 			self[key] = board
 
+	def get_board(self, key):
+		return self.boards[key]
+
 	def set_active_board(self, key):
 		self.active_board = self.boards[key]
 
@@ -327,7 +333,7 @@ class Save:
 		G = self.game
 		self.add_board("dbg", board.Board(self, v.Vector(12,7)))
 		self.set_active_board("dbg")
-		self["dbg"].add_all(G.mods["basic"].StoneTileFloor)
+		self["dbg"].add_all(G.mods["basic"].Grass)
 		G.do_cmd("make basic.Player");G.do_cmd("place last 3 3")
 		G.do_cmd("make basic.Telepad 10 5 dbg");G.do_cmd("place last 4 2")
 		G.do_cmd("place basic.StoneWall 1 2")

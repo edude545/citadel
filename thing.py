@@ -12,12 +12,20 @@ class Controllable:
 
 
 class Door:
-	def interact(self, entity):
-		self.passable = not self.passable
-		self.sprite = int(not self.sprite)
+
+	auto = True
+	door_open = True
+
+	def bump(self):
+		if not self.door_open:
+			self.toggle_door()
+
+	def toggle_door(self):
+		self.door_open = not self.door_open
+		self.passable = self.door_open
 
 
-class Thing: # The class for a game object that can exist in a board, e.g. tiles, interactive objects, entities, and items.
+class Thing: # The class for a game object that can exist "physically" in a board, e.g. tiles, interactive objects, entities, and items.
 
 	# Given attribute img, type pygame.Surface
 	# Given attribute spritesheet, type pygame.Surface
@@ -59,8 +67,8 @@ class Thing: # The class for a game object that can exist in a board, e.g. tiles
 	def interact(self, entity):
 		pass
 
-	def step_on(self, entity):
-		pass
+	def step_on(self, entity): pass
+	def bump(self, entity): pass
 
 
 class Tile(Thing):
@@ -126,6 +134,7 @@ class Entity(Thing):
 	def walk(self, dist=1):
 		new = self.get_pos() + common.direction_int_to_vector(self.direction) * dist
 		if 0 <= new[0] < self.loc.board.width() and 0 <= new[1] < self.loc.board.height() and (self.ghost or self.loc.board[new].is_passable()):
+			self.loc.board[new].bump(self)
 			self.loc.board.move(self, new)
 			self.loc.board[new].step_on(self)
 

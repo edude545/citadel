@@ -12,11 +12,12 @@ class ModRegistry:
 		self.mods = {}
 		self.img_ext = ".png"
 
-		sys.path.insert(0,"mods")
 		for name in os.listdir("mods"):
 			if name[0] != "_": # ignore mods that have an underscore at the starts of their names
-				modf = __import__(name)
-				self[name] = mod.Mod(name, self.game)
+				sys.path.insert(0,"mods\\"+name)
+				self[name] = __import__(name).Mod(name,self.game)
+				del(sys.path[0])
+				self.game.add_console_message("HOOK: onload, "+name)
 				self[name].call_hook("onload")
 		del(sys.path[0])
 
@@ -39,5 +40,6 @@ class ModRegistry:
 		return list(self.mods)
 
 	def call_hooks(self, name):
+		self.game.add_console_message("HOOK: "+name)
 		for mod in self:
 			mod.call_hook(name)
